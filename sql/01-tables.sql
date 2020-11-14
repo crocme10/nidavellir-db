@@ -13,8 +13,8 @@ CREATE OR REPLACE FUNCTION array2string(TEXT[])
 CREATE OR REPLACE FUNCTION random_signature()
   RETURNS TEXT LANGUAGE SQL IMMUTABLE AS $$SELECT MD5(RANDOM()::TEXT)$$;
 
-CREATE OR REPLACE FUNCTION index_signature(TEXT, TEXT, TEXT[])
-  RETURNS TEXT LANGUAGE SQL IMMUTABLE AS $$SELECT MD5($1 || '-' || $2 || '-' || array2string($3))$$;
+CREATE OR REPLACE FUNCTION index_signature(VARCHAR(64), VARCHAR(64), TEXT[])
+  RETURNS VARCHAR(128) LANGUAGE SQL IMMUTABLE AS $$SELECT MD5($1 || '-' || $2 || '-' || array2string($3))$$;
 
 CREATE TABLE index_types (
   id VARCHAR(64) PRIMARY KEY
@@ -53,7 +53,7 @@ CREATE TABLE indexes (
   index_type VARCHAR(64) REFERENCES index_types(id) ON DELETE CASCADE,
   data_source VARCHAR(64) REFERENCES data_sources(id) ON DELETE CASCADE,
   regions TEXT[],
-  signature TEXT
+  signature VARCHAR(128)
     GENERATED ALWAYS AS (index_signature(index_type, data_source, regions)) STORED
     CONSTRAINT unique_index_signature UNIQUE,
   status index_status NOT NULL DEFAULT 'not_available',

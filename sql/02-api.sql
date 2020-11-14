@@ -5,8 +5,8 @@
 -- This type is used to return a environment to the client
 CREATE TYPE return_environment_type AS (
     id          UUID
-  , name        TEXT
-  , signature   TEXT
+  , name        VARCHAR(256)
+  , signature   VARCHAR(512)
   , created_at  TIMESTAMPTZ
   , updated_at  TIMESTAMPTZ
 );
@@ -14,10 +14,10 @@ CREATE TYPE return_environment_type AS (
 -- This type is used to return an index to the client
 CREATE TYPE return_index_type AS (
     id          UUID
-  , signature   TEXT
-  , index_type  TEXT
-  , data_source TEXT
+  , index_type  VARCHAR(64)
+  , data_source VARCHAR(64)
   , regions     TEXT[]
+  , signature   VARCHAR(128)
   , status      index_status
   , created_at  TIMESTAMPTZ
   , updated_at  TIMESTAMPTZ
@@ -41,7 +41,7 @@ RETURNS SETOF return_index_type
 AS $$
 BEGIN
   RETURN QUERY
-  SELECT i.id, i.signature, i.index_type, i.data_source, i.regions, i.status, i.created_at, i.updated_at
+  SELECT i.id, i.index_type, i.data_source, i.regions, i.signature, i.status, i.created_at, i.updated_at
   FROM indexes AS i
   INNER JOIN environment_index_map AS m ON i.id = m.index_id
   WHERE m.environment_id = $1;
@@ -77,6 +77,8 @@ AS $$
 DECLARE
   res return_index_type;
 BEGIN
+  -- FIXME We need to check if the environment exists first, otherwise there is no
+  -- need to create the index.
   INSERT INTO indexes (index_type, data_source, regions) VALUES (
       $2  -- index type
     , $3  -- data source
@@ -84,7 +86,7 @@ BEGIN
   )
   -- We're faking an update, so that the returning clause is called, even if there is no real update.
   ON CONFLICT ON CONSTRAINT unique_index_signature DO UPDATE SET index_type = EXCLUDED.index_type
-  RETURNING id, signature, index_type, data_source, regions, status, created_at, updated_at INTO res;
+  RETURNING id, index_type, data_source, regions, signature, status, created_at, updated_at INTO res;
   INSERT INTO environment_index_map (environment_id, index_id) VALUES ($1, res.id);
   PERFORM update_environment_signature($1);
   RETURN res;
