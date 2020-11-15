@@ -103,7 +103,7 @@ DECLARE
   res return_environment_type;
 BEGIN
   DELETE FROM environments WHERE id = $1
-  RETURNING id, signature, created_at, updated_at INTO res;
+  RETURNING id, name, signature, created_at, updated_at INTO res;
   RETURN res;
 END;
 $$
