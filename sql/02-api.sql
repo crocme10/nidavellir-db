@@ -133,7 +133,7 @@ BEGIN
     GROUP BY ei.environment_id
   )
   WHERE id = $1
-  RETURNING id, signature, created_at, updated_at INTO res;
+  RETURNING id, name, signature, port, created_at, updated_at INTO res;
   RETURN res;
   EXCEPTION
   WHEN others
@@ -154,3 +154,18 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_environment_by_id (
+    _environment_id   UUID    -- (1)
+) RETURNS return_environment_type
+AS $$
+DECLARE
+  res return_environment_type;
+BEGIN
+  SELECT id, name, signature, port, created_at, updated_at FROM environments WHERE id = $1 INTO res;
+  RETURN res;
+END;
+$$
+LANGUAGE plpgsql;
+
+
