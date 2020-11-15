@@ -42,6 +42,7 @@ CREATE TABLE environments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(256) UNIQUE,
   signature VARCHAR(512) CONSTRAINT unique_environment_signature UNIQUE DEFAULT random_signature(),
+  port INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

@@ -7,6 +7,7 @@ CREATE TYPE return_environment_type AS (
     id          UUID
   , name        VARCHAR(256)
   , signature   VARCHAR(512)
+  , port        INTEGER
   , created_at  TIMESTAMPTZ
   , updated_at  TIMESTAMPTZ
 );
@@ -28,7 +29,7 @@ RETURNS SETOF return_environment_type
 AS $$
 BEGIN
   RETURN QUERY
-  SELECT id, name, signature, created_at, updated_at
+  SELECT id, name, signature, port, created_at, updated_at
   FROM environments;
 END;
 $$
@@ -50,18 +51,20 @@ $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION create_environment (
-    _name        TEXT                 -- name        (1)
+    _name        TEXT,    -- name   (1)
+    _port        INTEGER  -- port   (2)
 ) RETURNS return_environment_type
 AS $$
 DECLARE
   res return_environment_type;
 BEGIN
-  INSERT INTO environments (name) VALUES (
-      $1  -- name
+  INSERT INTO environments (name, port) VALUES (
+      $1,  -- name
+      $2   -- port
   )
   -- We're faking an update, so that the returning clause is called, even if there is no real update.
   ON CONFLICT ("name") DO UPDATE SET name = EXCLUDED.name
-  RETURNING id, name, signature, created_at, updated_at INTO res;
+  RETURNING id, name, signature, port, created_at, updated_at INTO res;
   RETURN res;
 END;
 $$
@@ -103,7 +106,7 @@ DECLARE
   res return_environment_type;
 BEGIN
   DELETE FROM environments WHERE id = $1
-  RETURNING id, name, signature, created_at, updated_at INTO res;
+  RETURNING id, name, signature, port, created_at, updated_at INTO res;
   RETURN res;
 END;
 $$
